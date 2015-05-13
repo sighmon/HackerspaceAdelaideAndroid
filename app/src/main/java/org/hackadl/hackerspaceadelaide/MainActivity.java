@@ -57,13 +57,31 @@ public class MainActivity extends ActionBarActivity {
 
             stringBuilder = new StringBuilder();
             IsoDep iso = IsoDep.get(tag);
+            byte[] READ_BINARY = {
+                    (byte) 0x00, // CLA Class
+                    (byte) 0xB0, // INS Instruction
+                    (byte) 0x80, // P1  (indicate use of SFI)
+                    (byte) 0x01, // P2  (SFI = 0x01)
+                    (byte) 0x04  // LE  maximal number of bytes expected in result
+            };
             if (iso != null) {
-                byte[] histBytes = iso.getHistoricalBytes();
-                for (byte histByte : histBytes) {
-                    stringBuilder.append(String.format("%02X ", histByte));
+                try {
+                    iso.connect();
+                    byte[] isoBytes = iso.transceive(READ_BINARY);
+                    for (byte isoByte : isoBytes) {
+                        stringBuilder.append(String.format("%02X ", isoByte));
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+                Log.i("NFC", "isoBytes: " + stringBuilder.toString());
+
             }
-            Log.i("NFC", "HISTORY: " + stringBuilder.toString());
+
+            Ndef ndefTag = Ndef.get(tag);
+            if (ndefTag != null) {
+                Log.i("NFC", "Ndef: " + ndefTag.getType());
+            }
         }
 
     }
